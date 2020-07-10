@@ -1,6 +1,7 @@
 package main
 
 import (
+	"go-todos/apis"
 	"go-todos/handlers"
 	"net/http"
 
@@ -10,7 +11,8 @@ import (
 func main() {
 	r := mux.NewRouter()
 
-	r.HandleFunc("/todos", handlers.GetTodos)
+	client := &apis.HttpClient{}
+	r.HandleFunc("/todos", handlers.GetTodos(client))
 
 	http.ListenAndServe(":8080", r)
 }

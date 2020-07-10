@@ -5,15 +5,13 @@ import (
 	"net/http"
 )
 
-var Client httpInterface = &httpClient{}
-
-type httpInterface interface {
+type HttpInterface interface {
 	Get(string) ([]byte, error)
 }
 
-type httpClient struct{}
+type HttpClient struct{}
 
-func (c *httpClient) Get(url string) ([]byte, error) {
+func (c *HttpClient) Get(url string) ([]byte, error) {
 	return httpGet(url)
 }
 

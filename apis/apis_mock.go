@@ -1,9 +1,12 @@
 package apis
 
-type MockHttpClient struct{}
+import "github.com/stretchr/testify/mock"
 
-func (m *MockHttpClient) Get(url string) ([]byte, error) {
-	return MockGet(url)
+type MockHttpClient struct {
+	mock.Mock
 }
 
-var MockGet func(string) ([]byte, error)
+func (m *MockHttpClient) Get(url string) ([]byte, error) {
+	ret := m.Called(url)
+	return ret.Get(0).([]byte), ret.Error(1)
+}

@@ -1,6 +1,7 @@
 package handlers
 
 import (
+	"go-todos/apis"
 	"net/http"
 	"net/http/httptest"
 	"testing"
@@ -9,12 +10,9 @@ import (
 )
 
 func TestGetTodos(t *testing.T) {
-	_httpGet := httpGet
-	defer func() {
-		httpGet = _httpGet
-	}()
+	apis.Client = &apis.MockHttpClient{}
 
-	httpGet = func(string) ([]byte, error) {
+	apis.MockGet = func(string) ([]byte, error) {
 		return []byte(`[{"title":"return this title"}]`), nil
 	}
 	req, _ := http.NewRequest("GET", "/todos", nil)

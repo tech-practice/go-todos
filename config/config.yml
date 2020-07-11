@@ -1,0 +1,5 @@
+environment: dev
+mongo:
+  server: mongodb://mongo:27017
+  database: Mgo
+  collection: Todos

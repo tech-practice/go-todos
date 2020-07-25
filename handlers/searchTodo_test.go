@@ -1,32 +1,28 @@
 package handlers_test
 
 import (
-	"encoding/json"
+	"go-todos/database"
 	"go-todos/handlers"
 	"go-todos/models"
 	"net/http"
 	"net/http/httptest"
 	"testing"
 
-	"github.com/stretchr/testify/assert"
+	"github.com/stretchr/testify/mock"
+
+	"github.com/gorilla/mux"
 )
 
-func TestSearchTodo(t *testing.T) {
-	id := AddNewTodo()
+func TestSearchTodos(t *testing.T) {
+	client := &database.MockTodoClient{}
+
 	tests := map[string]struct {
 		payload      string
 		expectedCode int
-		expected     string
 	}{
-		"should return 200 - found": {
+		"should return 200": {
 			payload:      `{"title": "learning golang"}`,
 			expectedCode: 200,
-			expected:     "learning golang",
-		},
-		"should return 200 - not found": {
-			payload:      `{"title": "learning docker"}`,
-			expectedCode: 200,
-			expected:     "",
 		},
 		"should return 400": {
 			payload:      "invalid json string",
@@ -36,23 +32,23 @@ func TestSearchTodo(t *testing.T) {
 
 	for name, test := range tests {
 		t.Run(name, func(t *testing.T) {
+
+			client.On("Search", mock.Anything).Return([]models.Todo{}, nil)
+
 			req, _ := http.NewRequest("GET", "/todos?q="+test.payload, nil)
 			rec := httptest.NewRecorder()
-			h := http.HandlerFunc(handlers.SearchTodos(client))
-			h.ServeHTTP(rec, req)
+
+			r := mux.NewRouter()
+			r.HandleFunc("/todos", handlers.SearchTodos(client))
+			r.ServeHTTP(rec, req)
 
 			if test.expectedCode == 200 {
-				todos := []models.Todo{}
-				_ = json.Unmarshal([]byte(rec.Body.String()), &todos)
-				for _, todo := range todos {
-					assert.Equal(t, test.expected, todo.Title)
-				}
+				client.AssertExpectations(t)
+			} else {
+				client.AssertNotCalled(t, "Search")
 			}
 
-			assert.Equal(t, test.expectedCode, rec.Code)
 		})
 	}
 
-	//cleanup
-	_, _ = client.Delete(id)
 }

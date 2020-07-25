@@ -1,38 +1,29 @@
 package handlers_test
 
 import (
-	"encoding/json"
+	"go-todos/database"
 	"go-todos/handlers"
 	"go-todos/models"
 	"net/http"
 	"net/http/httptest"
 	"testing"
 
+	"go.mongodb.org/mongo-driver/bson/primitive"
+
 	"github.com/gorilla/mux"
-	"github.com/stretchr/testify/assert"
 )
 
 func TestDeleteTodo(t *testing.T) {
-	id := AddNewTodo()
+	client := &database.MockTodoClient{}
+	id := primitive.NewObjectID().Hex()
 
 	tests := map[string]struct {
 		id           string
 		expectedCode int
-		deletedCount int64
 	}{
-		"should return 200 and deleted count 1": {
+		"should return 200": {
 			id:           id,
 			expectedCode: 200,
-			deletedCount: 1,
-		},
-		"should return 200 and modified count 0": {
-			id:           id,
-			expectedCode: 200,
-			deletedCount: 0,
-		},
-		"should return 400": {
-			id:           "abc",
-			expectedCode: 400,
 		},
 		"should return 404": {
 			id:           "",
@@ -42,6 +33,9 @@ func TestDeleteTodo(t *testing.T) {
 
 	for name, test := range tests {
 		t.Run(name, func(t *testing.T) {
+			if test.expectedCode == 200 {
+				client.On("Delete", test.id).Return(models.TodoDelete{}, nil)
+			}
 			req, _ := http.NewRequest("DELETE", "/todos/"+test.id, nil)
 			rec := httptest.NewRecorder()
 
@@ -50,15 +44,10 @@ func TestDeleteTodo(t *testing.T) {
 			r.ServeHTTP(rec, req)
 
 			if test.expectedCode == 200 {
-				todo := models.TodoDelete{}
-				_ = json.Unmarshal([]byte(rec.Body.String()), &todo)
-				assert.Equal(t, test.deletedCount, todo.DeletedCount)
+				client.AssertExpectations(t)
+			} else {
+				client.AssertNotCalled(t, "Delete")
 			}
-
-			assert.Equal(t, test.expectedCode, rec.Code)
 		})
 	}
-
-	//cleanup
-	_, _ = client.Delete(id)
 }

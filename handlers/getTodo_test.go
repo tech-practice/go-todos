@@ -1,29 +1,29 @@
 package handlers_test
 
 import (
-	"encoding/json"
+	"go-todos/database"
 	"go-todos/handlers"
 	"go-todos/models"
 	"net/http"
 	"net/http/httptest"
 	"testing"
 
+	"go.mongodb.org/mongo-driver/bson/primitive"
+
 	"github.com/gorilla/mux"
-	"github.com/stretchr/testify/assert"
 )
 
 func TestGetTodo(t *testing.T) {
-	id := AddNewTodo()
+	client := &database.MockTodoClient{}
+	id := primitive.NewObjectID().Hex()
 
 	tests := map[string]struct {
 		id           string
 		expectedCode int
-		expected     string
 	}{
 		"should return 200": {
 			id:           id,
 			expectedCode: 200,
-			expected:     "learning golang",
 		},
 		"should return 404": {
 			id:           "",
@@ -33,6 +33,9 @@ func TestGetTodo(t *testing.T) {
 
 	for name, test := range tests {
 		t.Run(name, func(t *testing.T) {
+			if test.expectedCode == 200 {
+				client.On("Get", test.id).Return(models.Todo{}, nil)
+			}
 			req, _ := http.NewRequest("GET", "/todos/"+test.id, nil)
 			rec := httptest.NewRecorder()
 
@@ -41,15 +44,10 @@ func TestGetTodo(t *testing.T) {
 			r.ServeHTTP(rec, req)
 
 			if test.expectedCode == 200 {
-				todo := models.Todo{}
-				_ = json.Unmarshal([]byte(rec.Body.String()), &todo)
-				assert.Equal(t, test.expected, todo.Title)
+				client.AssertExpectations(t)
+			} else {
+				client.AssertNotCalled(t, "Get")
 			}
-
-			assert.Equal(t, test.expectedCode, rec.Code)
 		})
 	}
-
-	//cleanup
-	_, _ = client.Delete(id)
 }

@@ -1,7 +1,7 @@
 package handlers_test
 
 import (
-	"encoding/json"
+	"go-todos/database"
 	"go-todos/handlers"
 	"go-todos/models"
 	"net/http"
@@ -9,45 +9,25 @@ import (
 	"strings"
 	"testing"
 
-	"github.com/gorilla/mux"
-	"github.com/stretchr/testify/assert"
 	"go.mongodb.org/mongo-driver/bson/primitive"
+
+	"github.com/gorilla/mux"
+	"github.com/stretchr/testify/mock"
 )
 
-func AddNewTodo() string {
-	todo := models.Todo{
-		UserID:    1,
-		Title:     "learning golang",
-		Completed: false,
-	}
-	res, _ := client.Insert(todo)
-	return res.ID.(primitive.ObjectID).Hex()
-}
-
 func TestUpdateTodo(t *testing.T) {
-	id := AddNewTodo()
+	client := &database.MockTodoClient{}
+	id := primitive.NewObjectID().Hex()
 
 	tests := map[string]struct {
-		id            string
-		payload       string
-		expectedCode  int
-		modifiedCount int64
+		id           string
+		payload      string
+		expectedCode int
 	}{
-		"should return 200 and modified count 1": {
-			id:            id,
-			payload:       `{"completed":true}`,
-			expectedCode:  200,
-			modifiedCount: 1,
-		},
-		"should return 200 and modified count 0": {
-			id:            id,
-			payload:       `{"title":"learning golang"}`,
-			expectedCode:  200,
-			modifiedCount: 0,
-		},
-		"should return 400": {
-			id:           "abc",
-			expectedCode: 400,
+		"should return 200": {
+			id:           id,
+			payload:      `{"completed": true}`,
+			expectedCode: 200,
 		},
 		"should return 404": {
 			id:           "",
@@ -57,7 +37,10 @@ func TestUpdateTodo(t *testing.T) {
 
 	for name, test := range tests {
 		t.Run(name, func(t *testing.T) {
-			req, _ := http.NewRequest("PATH", "/todos/"+test.id, strings.NewReader(test.payload))
+			if test.expectedCode == 200 {
+				client.On("Update", test.id, mock.Anything).Return(models.TodoUpdate{}, nil)
+			}
+			req, _ := http.NewRequest("PATCH", "/todos/"+test.id, strings.NewReader(test.payload))
 			rec := httptest.NewRecorder()
 
 			r := mux.NewRouter()
@@ -65,15 +48,10 @@ func TestUpdateTodo(t *testing.T) {
 			r.ServeHTTP(rec, req)
 
 			if test.expectedCode == 200 {
-				todo := models.TodoUpdate{}
-				_ = json.Unmarshal([]byte(rec.Body.String()), &todo)
-				assert.Equal(t, test.modifiedCount, todo.ModifiedCount)
+				client.AssertExpectations(t)
+			} else {
+				client.AssertNotCalled(t, "Update")
 			}
-
-			assert.Equal(t, test.expectedCode, rec.Code)
 		})
 	}
-
-	//cleanup
-	_, _ = client.Delete(id)
 }

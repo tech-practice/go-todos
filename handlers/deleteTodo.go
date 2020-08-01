@@ -4,20 +4,19 @@ import (
 	"go-todos/database"
 	"net/http"
 
-	"github.com/gorilla/mux"
+	"github.com/gin-gonic/gin"
 )
 
-func DeleteTodo(db database.TodoInterface) http.HandlerFunc {
-	return func(w http.ResponseWriter, r *http.Request) {
-		params := mux.Vars(r)
-		id := params["id"]
+func DeleteTodo(db database.TodoInterface) gin.HandlerFunc {
+	return func(c *gin.Context) {
+		id := c.Param("id")
 
 		res, err := db.Delete(id)
 		if err != nil {
-			WriteResponse(w, http.StatusBadRequest, err.Error())
+			c.JSON(http.StatusBadRequest, gin.H{"message": err.Error()})
 			return
 		}
 
-		WriteResponse(w, http.StatusOK, res)
+		c.JSON(http.StatusOK, res)
 	}
 }

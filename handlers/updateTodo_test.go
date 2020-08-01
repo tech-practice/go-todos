@@ -11,7 +11,7 @@ import (
 
 	"go.mongodb.org/mongo-driver/bson/primitive"
 
-	"github.com/gorilla/mux"
+	"github.com/gin-gonic/gin"
 	"github.com/stretchr/testify/mock"
 )
 
@@ -43,8 +43,8 @@ func TestUpdateTodo(t *testing.T) {
 			req, _ := http.NewRequest("PATCH", "/todos/"+test.id, strings.NewReader(test.payload))
 			rec := httptest.NewRecorder()
 
-			r := mux.NewRouter()
-			r.HandleFunc("/todos/{id}", handlers.UpdateTodo(client))
+			r := gin.Default()
+			r.PATCH("/todos/:id", handlers.UpdateTodo(client))
 			r.ServeHTTP(rec, req)
 
 			if test.expectedCode == 200 {

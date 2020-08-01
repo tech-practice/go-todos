@@ -6,6 +6,7 @@ import (
 
 type Configuration struct {
 	Environment string
+	Token       string
 	Mongo       MongoConfiguration
 }
 

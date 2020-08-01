@@ -9,6 +9,7 @@ import (
 	"strings"
 	"testing"
 
+	"github.com/gin-gonic/gin"
 	"github.com/stretchr/testify/mock"
 )
 
@@ -33,8 +34,10 @@ func TestInsertTodo(t *testing.T) {
 			client.On("Insert", mock.Anything).Return(models.Todo{}, nil)
 			req, _ := http.NewRequest("POST", "/todos", strings.NewReader(test.payload))
 			rec := httptest.NewRecorder()
-			h := http.HandlerFunc(handlers.InsertTodo(client))
-			h.ServeHTTP(rec, req)
+
+			r := gin.Default()
+			r.POST("/todos", handlers.InsertTodo(client))
+			r.ServeHTTP(rec, req)
 
 			if test.expectedCode == 200 {
 				client.AssertExpectations(t)

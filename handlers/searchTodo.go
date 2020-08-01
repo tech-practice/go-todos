@@ -4,27 +4,29 @@ import (
 	"encoding/json"
 	"go-todos/database"
 	"net/http"
+
+	"github.com/gin-gonic/gin"
 )
 
-func SearchTodos(db database.TodoInterface) http.HandlerFunc {
-	return func(w http.ResponseWriter, r *http.Request) {
+func SearchTodos(db database.TodoInterface) gin.HandlerFunc {
+	return func(c *gin.Context) {
 		var filter interface{}
-		query := r.URL.Query().Get("q")
+		query := c.Query("q")
 
 		if query != "" {
 			err := json.Unmarshal([]byte(query), &filter)
 			if err != nil {
-				WriteResponse(w, http.StatusBadRequest, err.Error())
+				c.JSON(http.StatusBadRequest, gin.H{"message": err.Error()})
 				return
 			}
 		}
 
 		res, err := db.Search(filter)
 		if err != nil {
-			WriteResponse(w, http.StatusBadRequest, err.Error())
+			c.JSON(http.StatusBadRequest, gin.H{"message": err.Error()})
 			return
 		}
 
-		WriteResponse(w, http.StatusOK, res)
+		c.JSON(http.StatusOK, res)
 	}
 }

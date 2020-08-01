@@ -5,9 +5,8 @@ import (
 	"go-todos/config"
 	"go-todos/database"
 	"go-todos/handlers"
-	"net/http"
 
-	"github.com/gorilla/mux"
+	"github.com/gin-gonic/gin"
 )
 
 func main() {
@@ -22,13 +21,28 @@ func main() {
 		Ctx: ctx,
 	}
 
-	r := mux.NewRouter()
+	r := gin.Default()
 
-	r.HandleFunc("/todos", handlers.SearchTodos(client)).Methods("GET")
-	r.HandleFunc("/todos/{id}", handlers.GetTodo(client)).Methods("GET")
-	r.HandleFunc("/todos", handlers.InsertTodo(client)).Methods("POST")
-	r.HandleFunc("/todos/{id}", handlers.UpdateTodo(client)).Methods("PATCH")
-	r.HandleFunc("/todos/{id}", handlers.DeleteTodo(client)).Methods("DELETE")
+	todos := r.Group("/todos")
+	todos.Use(Authorization(conf.Token))
+	{
+		todos.GET("/", handlers.SearchTodos(client))
+		todos.GET("/:id", handlers.GetTodo(client))
+		todos.POST("/", handlers.InsertTodo(client))
+		todos.PATCH("/:id", handlers.UpdateTodo(client))
+		todos.DELETE("/:id", handlers.DeleteTodo(client))
+	}
 
-	http.ListenAndServe(":8080", r)
+	r.Run(":8080")
+}
+
+func Authorization(token string) gin.HandlerFunc {
+	return func(c *gin.Context) {
+		auth := c.GetHeader("Authorization")
+		if token != auth {
+			c.AbortWithStatusJSON(401, gin.H{"message": "Invalid authorization token"})
+			return
+		}
+		c.Next()
+	}
 }

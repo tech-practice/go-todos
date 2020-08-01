@@ -8,9 +8,8 @@ import (
 	"net/http/httptest"
 	"testing"
 
+	"github.com/gin-gonic/gin"
 	"go.mongodb.org/mongo-driver/bson/primitive"
-
-	"github.com/gorilla/mux"
 )
 
 func TestDeleteTodo(t *testing.T) {
@@ -39,8 +38,8 @@ func TestDeleteTodo(t *testing.T) {
 			req, _ := http.NewRequest("DELETE", "/todos/"+test.id, nil)
 			rec := httptest.NewRecorder()
 
-			r := mux.NewRouter()
-			r.HandleFunc("/todos/{id}", handlers.DeleteTodo(client))
+			r := gin.Default()
+			r.DELETE("/todos/:id", handlers.DeleteTodo(client))
 			r.ServeHTTP(rec, req)
 
 			if test.expectedCode == 200 {

@@ -1,0 +1,245 @@
+{
+	"info": {
+		"_postman_id": "13de89c0-3566-4e9c-b963-51791155c146",
+		"name": "Todos Integration Test",
+		"schema": "https://schema.getpostman.com/json/collection/v2.1.0/collection.json"
+	},
+	"item": [
+		{
+			"name": "Insert /todos",
+			"event": [
+				{
+					"listen": "test",
+					"script": {
+						"id": "0b3d9e52-7f72-4ce4-8ae2-a17fb91a038d",
+						"exec": [
+							"pm.test(\"success\", () => {",
+							"    const body = pm.response.json()",
+							"    pm.collectionVariables.set(\"ID\", body.id)",
+							"    pm.response.to.have.jsonBody(\"id\")",
+							"})"
+						],
+						"type": "text/javascript"
+					}
+				}
+			],
+			"request": {
+				"method": "POST",
+				"header": [
+					{
+						"key": "Authorization",
+						"value": "{{Token}}",
+						"type": "text"
+					}
+				],
+				"body": {
+					"mode": "raw",
+					"raw": "{\n    \"userId\": 1,\n    \"title\": \"learning golang\",\n    \"completed\": false\n}",
+					"options": {
+						"raw": {
+							"language": "json"
+						}
+					}
+				},
+				"url": {
+					"raw": "{{URL}}/todos",
+					"host": [
+						"{{URL}}"
+					],
+					"path": [
+						"todos"
+					]
+				}
+			},
+			"response": []
+		},
+		{
+			"name": "Update /todos/:id",
+			"event": [
+				{
+					"listen": "test",
+					"script": {
+						"id": "078a6476-4b46-4104-89c6-4ce4c03f5360",
+						"exec": [
+							"pm.test(\"success\", () => {",
+							"    const body = pm.response.json()",
+							"    pm.expect(body.modifiedCount).to.eql(1)",
+							"})"
+						],
+						"type": "text/javascript"
+					}
+				}
+			],
+			"request": {
+				"method": "PATCH",
+				"header": [
+					{
+						"key": "Authorization",
+						"type": "text",
+						"value": "{{Token}}"
+					}
+				],
+				"body": {
+					"mode": "raw",
+					"raw": "{\n    \"completed\": true\n}",
+					"options": {
+						"raw": {
+							"language": "json"
+						}
+					}
+				},
+				"url": {
+					"raw": "{{URL}}/todos/{{ID}}",
+					"host": [
+						"{{URL}}"
+					],
+					"path": [
+						"todos",
+						"{{ID}}"
+					]
+				}
+			},
+			"response": []
+		},
+		{
+			"name": "Get /todos/:id",
+			"event": [
+				{
+					"listen": "test",
+					"script": {
+						"id": "180132bd-08ad-4767-99e8-89518316bf63",
+						"exec": [
+							"pm.test(\"success\", () => {",
+							"    const body = pm.response.json()",
+							"    pm.expect(body.completed).to.eql(true)",
+							"})"
+						],
+						"type": "text/javascript"
+					}
+				}
+			],
+			"request": {
+				"method": "GET",
+				"header": [
+					{
+						"key": "Authorization",
+						"type": "text",
+						"value": "{{Token}}"
+					}
+				],
+				"url": {
+					"raw": "{{URL}}/todos/{{ID}}",
+					"host": [
+						"{{URL}}"
+					],
+					"path": [
+						"todos",
+						"{{ID}}"
+					]
+				}
+			},
+			"response": []
+		},
+		{
+			"name": "Search /todos",
+			"event": [
+				{
+					"listen": "test",
+					"script": {
+						"id": "49d656e9-ddd2-43ac-84cd-2d0a57ea3f3a",
+						"exec": [
+							"pm.test(\"success\", () => {",
+							"    const body = pm.response.json()",
+							"    pm.expect(body.length).to.eql(1)",
+							"})"
+						],
+						"type": "text/javascript"
+					}
+				}
+			],
+			"request": {
+				"method": "GET",
+				"header": [
+					{
+						"key": "Authorization",
+						"type": "text",
+						"value": "{{Token}}"
+					}
+				],
+				"url": {
+					"raw": "{{URL}}/todos?q={\"completed\":true}",
+					"host": [
+						"{{URL}}"
+					],
+					"path": [
+						"todos"
+					],
+					"query": [
+						{
+							"key": "q",
+							"value": "{\"completed\":true}"
+						}
+					]
+				}
+			},
+			"response": []
+		},
+		{
+			"name": "Delete /todos/:id",
+			"event": [
+				{
+					"listen": "test",
+					"script": {
+						"id": "260ce96e-7467-4e6c-aa7e-7d67f82d82ac",
+						"exec": [
+							"pm.test(\"success\", () => {",
+							"    const body = pm.response.json()",
+							"    pm.expect(body.deletedCount).to.eql(1)",
+							"})"
+						],
+						"type": "text/javascript"
+					}
+				}
+			],
+			"request": {
+				"method": "DELETE",
+				"header": [
+					{
+						"key": "Authorization",
+						"type": "text",
+						"value": "{{Token}}"
+					}
+				],
+				"url": {
+					"raw": "{{URL}}/todos/{{ID}}",
+					"host": [
+						"{{URL}}"
+					],
+					"path": [
+						"todos",
+						"{{ID}}"
+					]
+				}
+			},
+			"response": []
+		}
+	],
+	"variable": [
+		{
+			"id": "8fd3bf0f-b29c-4ae1-91d9-bde9db30ae8c",
+			"key": "URL",
+			"value": "http://localhost:8080"
+		},
+		{
+			"id": "3be3b6d9-1590-46dc-b8e2-39e7d5638a77",
+			"key": "Token",
+			"value": "ABCDEFG"
+		},
+		{
+			"id": "0f30cd27-2fa7-4aca-97c7-a3ec65366aaf",
+			"key": "ID",
+			"value": ""
+		}
+	],
+	"protocolProfileBehavior": {}
+}

@@ -1,38 +1,28 @@
 package handlers
 
 import (
-	"encoding/json"
 	"go-todos/database"
-	"io/ioutil"
 	"net/http"
 
-	"github.com/gorilla/mux"
+	"github.com/gin-gonic/gin"
 )
 
-func UpdateTodo(db database.TodoInterface) http.HandlerFunc {
-	return func(w http.ResponseWriter, r *http.Request) {
-		params := mux.Vars(r)
-		id := params["id"]
-
-		body, err := ioutil.ReadAll(r.Body)
-		if err != nil {
-			WriteResponse(w, http.StatusBadRequest, err.Error())
-			return
-		}
-
+func UpdateTodo(db database.TodoInterface) gin.HandlerFunc {
+	return func(c *gin.Context) {
 		var todo interface{}
-		err = json.Unmarshal(body, &todo)
+		id := c.Param("id")
+		err := c.BindJSON(&todo)
 		if err != nil {
-			WriteResponse(w, http.StatusBadRequest, err.Error())
+			c.JSON(http.StatusBadRequest, gin.H{"message": err.Error()})
 			return
 		}
 
 		res, err := db.Update(id, todo)
 		if err != nil {
-			WriteResponse(w, http.StatusBadRequest, err.Error())
+			c.JSON(http.StatusBadRequest, gin.H{"message": err.Error()})
 			return
 		}
 
-		WriteResponse(w, http.StatusOK, res)
+		c.JSON(http.StatusOK, res)
 	}
 }

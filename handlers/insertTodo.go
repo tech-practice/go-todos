@@ -1,41 +1,28 @@
 package handlers
 
 import (
-	"encoding/json"
 	"go-todos/database"
 	"go-todos/models"
-	"io/ioutil"
 	"net/http"
+
+	"github.com/gin-gonic/gin"
 )
 
-func InsertTodo(db database.TodoInterface) http.HandlerFunc {
-	return func(w http.ResponseWriter, r *http.Request) {
+func InsertTodo(db database.TodoInterface) gin.HandlerFunc {
+	return func(c *gin.Context) {
 		todo := models.Todo{}
-
-		body, err := ioutil.ReadAll(r.Body)
+		err := c.BindJSON(&todo)
 		if err != nil {
-			WriteResponse(w, http.StatusBadRequest, err.Error())
-			return
-		}
-
-		err = json.Unmarshal(body, &todo)
-		if err != nil {
-			WriteResponse(w, http.StatusBadRequest, err.Error())
+			c.JSON(http.StatusBadRequest, gin.H{"message": err.Error()})
 			return
 		}
 
 		res, err := db.Insert(todo)
 		if err != nil {
-			WriteResponse(w, http.StatusBadRequest, err.Error())
+			c.JSON(http.StatusBadRequest, gin.H{"message": err.Error()})
 			return
 		}
 
-		WriteResponse(w, http.StatusOK, res)
+		c.JSON(http.StatusOK, res)
 	}
-}
-
-func WriteResponse(w http.ResponseWriter, status int, res interface{}) {
-	w.Header().Set("Content-Type", "application/json")
-	w.WriteHeader(status)
-	json.NewEncoder(w).Encode(res)
 }

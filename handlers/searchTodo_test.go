@@ -8,9 +8,8 @@ import (
 	"net/http/httptest"
 	"testing"
 
+	"github.com/gin-gonic/gin"
 	"github.com/stretchr/testify/mock"
-
-	"github.com/gorilla/mux"
 )
 
 func TestSearchTodos(t *testing.T) {
@@ -38,8 +37,8 @@ func TestSearchTodos(t *testing.T) {
 			req, _ := http.NewRequest("GET", "/todos?q="+test.payload, nil)
 			rec := httptest.NewRecorder()
 
-			r := mux.NewRouter()
-			r.HandleFunc("/todos", handlers.SearchTodos(client))
+			r := gin.Default()
+			r.GET("/todos", handlers.SearchTodos(client))
 			r.ServeHTTP(rec, req)
 
 			if test.expectedCode == 200 {

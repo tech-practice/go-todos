@@ -46,6 +46,7 @@ func (c *TodoClient) Update(id string, update interface{}) (models.TodoUpdate, e
 	if err != nil {
 		return result, err
 	}
+	result.Result = todo
 	var exist map[string]interface{}
 	b, err := json.Marshal(todo)
 	if err != nil {
@@ -106,7 +107,7 @@ func (c *TodoClient) Get(id string) (models.Todo, error) {
 	if err != nil {
 		return todo, err
 	}
-
+	todo.ID = todo.ID.(primitive.ObjectID).Hex()
 	return todo, nil
 }
 func (c *TodoClient) Search(filter interface{}) ([]models.Todo, error) {
@@ -123,6 +124,7 @@ func (c *TodoClient) Search(filter interface{}) ([]models.Todo, error) {
 	for cursor.Next(c.Ctx) {
 		row := models.Todo{}
 		cursor.Decode(&row)
+		row.ID = row.ID.(primitive.ObjectID).Hex()
 		todos = append(todos, row)
 	}
 
